@@ -37,6 +37,11 @@ final class ConnectionPool {
                 try {
                     /** @var MySQLQuery $query */
                     while (($query = $thread->getDoneQueries()->shift()) !== null) {
+                        if ($query->isCrashed()) {
+                            ($this->onException)($query->getException());
+                            return;
+                        }
+
                         $id = spl_object_id($query);
                         [$successHandler] = $this->completionHandlers[$id];
                         if ($successHandler !== null) ($successHandler)($query->getResult());
