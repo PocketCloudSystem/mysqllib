@@ -17,7 +17,7 @@ final class ConnectionPool {
     protected array $threads = [];
 
     /**
-     * @param array $credentials e.g. ["user" => "admin", "password" => "123", "database" => "player"]
+     * @param array $credentials e.g. ["address" => "127.0.0.1", "user" => "admin", "password" => "123", "database" => "player", "port" => 3306] <-- in this order
      * @param int $threadCount
      * @param SleeperHandler $sleeperHandler
      * @param Closure $onException
