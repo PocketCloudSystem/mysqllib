@@ -2,7 +2,7 @@
 
 namespace r3pt1s\mysql\thread;
 
-use pmmp\thread\Thread;
+use pocketcloud\cloud\thread\Thread;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
 use pmmp\thread\ThreadSafeArray;
@@ -42,7 +42,7 @@ final class MySQLThread extends Thread {
         return $this->doneQueries;
     }
 
-    public function run(): void {
+    public function onRun(): void {
         $connection = new Connection(...$this->credentials);
 
         while (true) {
