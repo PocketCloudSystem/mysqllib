@@ -5,6 +5,7 @@ namespace r3pt1s\mysql;
 use Closure;
 use Exception;
 use pmmp\thread\Thread;
+use pmmp\thread\ThreadSafeArray;
 use pocketmine\snooze\SleeperHandler;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\thread\MySQLThread;
@@ -31,7 +32,7 @@ final class ConnectionPool {
         self::$instance = $this;
 
         for ($i = 0; $i < $this->threadCount; $i++) {
-            $thread = new MySQLThread($credentials);
+            $thread = new MySQLThread(ThreadSafeArray::fromArray($credentials));
 
             $sleeperHandlerEntry = $this->sleeperHandler->addNotifier(function () use ($thread, $i): void {
                 try {

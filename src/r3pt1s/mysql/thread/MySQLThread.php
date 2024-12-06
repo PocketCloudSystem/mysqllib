@@ -17,7 +17,7 @@ final class MySQLThread extends Thread {
     private ThreadSafeArray $doneQueries;
 
     public function __construct(
-        private readonly array $credentials
+        private readonly ThreadSafeArray $credentials
     ) {
         $this->queries = new ThreadSafeArray();
         $this->doneQueries = new ThreadSafeArray();
