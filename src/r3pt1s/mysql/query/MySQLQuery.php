@@ -7,6 +7,7 @@ use r3pt1s\mysql\ConnectionPool;
 use r3pt1s\mysql\util\Connection;
 use PDOStatement;
 use pmmp\thread\ThreadSafe;
+use RuntimeException;
 use Throwable;
 
 abstract class MySQLQuery extends ThreadSafe {
@@ -34,7 +35,7 @@ abstract class MySQLQuery extends ThreadSafe {
     }
 
     private function setResult(mixed $result): void {
-        if ($result !== null && !$result instanceof PDOStatement) {
+        if ($result !== null && !$result instanceof PDOStatement && $this->isSerializable($result)) {
             $this->resultSerialized = !is_scalar($result) && !$result instanceof ThreadSafe;
             $this->result = $this->resultSerialized ? igbinary_serialize($result) : $result;
         }
@@ -50,6 +51,20 @@ abstract class MySQLQuery extends ThreadSafe {
 
     public function getException(): mixed {
         return $this->crashed ? unserialize($this->exception) : null;
+    }
+
+    public function isSerializable(mixed $var): bool {
+        if (is_resource($var)) {
+            return false;
+        } elseif (is_object($var)) {
+            if ($var instanceof Closure) {
+                return false;
+            } elseif (!$var instanceof Serializable && !$var instanceof ArrayAccess) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static function create(mixed ...$args): self {
