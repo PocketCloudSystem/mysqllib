@@ -24,7 +24,7 @@ abstract class MySQLQuery extends ThreadSafe {
             $this->setResult($result);
         } catch (Throwable $throwable) {
             $this->crashed = true;
-            $this->exception = serialize(!$throwable instanceof PDOException ? $throwable : new RuntimeException($throwable->getMessage(), $throwable->getCode()));
+            $this->exception = serialize(!$throwable instanceof PDOException ? $throwable : new RuntimeException($throwable->getMessage()));
         }
     }
 
