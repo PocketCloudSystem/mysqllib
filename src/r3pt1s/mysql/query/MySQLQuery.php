@@ -2,20 +2,20 @@
 
 namespace r3pt1s\mysql\query;
 
+use ArrayAccess;
 use Closure;
-use PDOException;
 use r3pt1s\mysql\ConnectionPool;
 use r3pt1s\mysql\util\Connection;
 use PDOStatement;
 use pmmp\thread\ThreadSafe;
-use RuntimeException;
+use Serializable;
 use Throwable;
 
 abstract class MySQLQuery extends ThreadSafe {
 
     private mixed $result = null;
     private bool $crashed = false;
-    private mixed $exception = null;
+    private ?string $exception = null;
     private bool $resultSerialized = false;
 
     public function run(Connection $connection): void {
@@ -24,7 +24,7 @@ abstract class MySQLQuery extends ThreadSafe {
             $this->setResult($result);
         } catch (Throwable $throwable) {
             $this->crashed = true;
-            $this->exception = serialize(!$throwable instanceof PDOException ? $throwable : new RuntimeException($throwable->getMessage()));
+            $this->exception = $throwable->getMessage();
         }
     }
 
@@ -50,8 +50,8 @@ abstract class MySQLQuery extends ThreadSafe {
         return $this->crashed;
     }
 
-    public function getException(): mixed {
-        return $this->crashed ? unserialize($this->exception) : null;
+    public function getException(): ?string {
+        return $this->exception;
     }
 
     public function isSerializable(mixed $var): bool {
