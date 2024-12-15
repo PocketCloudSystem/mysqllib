@@ -3,6 +3,7 @@
 namespace r3pt1s\mysql\query;
 
 use Closure;
+use PDOException;
 use r3pt1s\mysql\ConnectionPool;
 use r3pt1s\mysql\util\Connection;
 use PDOStatement;
@@ -23,7 +24,7 @@ abstract class MySQLQuery extends ThreadSafe {
             $this->setResult($result);
         } catch (Throwable $throwable) {
             $this->crashed = true;
-            $this->exception = serialize($throwable);
+            $this->exception = serialize(!$throwable instanceof PDOException ? $throwable : new RuntimeException($throwable->getMessage(), $throwable->getCode()));
         }
     }
 
