@@ -17,7 +17,7 @@ class Connection extends Medoo {
         parent::__construct(["type" => "mysql", "host" => $this->address, "database" => $this->database, "username" => $this->user, "password" => $this->password, "port" => $this->port]);
     }
 
-    public function exec(string $statement, array $map = [], callable $callback = null): ?PDOStatement {
+    public function exec(string $statement, array $map = [], ?callable $callback = null): ?PDOStatement {
         try {
             return parent::exec($statement, $map, $callback);
         } catch (Exception) {
