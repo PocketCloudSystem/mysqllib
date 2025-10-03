@@ -884,11 +884,11 @@ class Medoo {
 
     /**
      * Build the where clause.
-     * @param array|null $where
+     * @param mixed $where
      * @param array $map
      * @return string
      */
-    protected function whereClause(?array $where, array &$map): string {
+    protected function whereClause(mixed $where, array &$map): string {
         $clause = '';
 
         if (is_array($where)) {
