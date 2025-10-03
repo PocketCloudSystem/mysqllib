@@ -507,10 +507,10 @@ class Medoo {
 
     /**
      * Finds whether the object is raw.
-     * @param object $object
+     * @param mixed $object
      * @return bool
      */
-    protected function isRaw(object $object): bool {
+    protected function isRaw(mixed $object): bool {
         return $object instanceof Raw;
     }
 
