@@ -38,7 +38,7 @@ final class QueryBuilder {
         return $this;
     }
 
-    public function select(array $join, array|string|null $columns = null, $where = null): self {
+    public function select(array $join, array|string|null $columns = null, ?array $where = null): self {
         $table = $this->table;
         $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->select($table, $join, $columns, $where));
         return $this;

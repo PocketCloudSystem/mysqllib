@@ -627,7 +627,7 @@ class Medoo {
      * @param bool $isJoin
      * @return string
      */
-    protected function columnPush(array|string &$columns, array &$map, bool $root, bool $isJoin = false): string {
+    protected function columnPush(mixed &$columns, array &$map, bool $root, bool $isJoin = false): string {
         if ($columns === '*') {
             return $columns;
         }
@@ -1044,9 +1044,9 @@ class Medoo {
         string $table,
         array &$map,
         array|string $join,
-        array|string|object|null &$columns = null,
+        mixed &$columns = null,
         ?array $where = null,
-        string|int|Raw|null $columnFn = null
+        mixed $columnFn = null
     ): string {
         preg_match(
             '/(?<table>[\p{L}_][\p{L}\p{N}@$#\-_]*)\s*\((?<alias>[\p{L}_][\p{L}\p{N}@$#\-_]*)\)/u',
@@ -1211,7 +1211,7 @@ class Medoo {
      * @param bool $root
      * @return array
      */
-    protected function columnMap(array|string $columns, array &$stack, bool $root): array {
+    protected function columnMap(mixed $columns, array &$stack, bool $root): array {
         if ($columns === '*') {
             return $stack;
         }
@@ -1456,7 +1456,7 @@ class Medoo {
      * @param array|null $where
      * @return array|null
      */
-    public function select(string $table, array $join, array|string|null $columns = null, ?array $where = null): ?array {
+    public function select(string $table, array $join, mixed $columns = null, ?array $where = null): ?array {
         $map = [];
         $result = [];
         $columnMap = [];
