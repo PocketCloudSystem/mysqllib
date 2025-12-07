@@ -27,12 +27,13 @@ final class ConnectionPool {
         array $credentials,
         private readonly int $threadCount,
         private readonly SleeperHandler $sleeperHandler,
-        private readonly Closure $onException
+        private readonly Closure $onException,
+        private readonly int $connectionTimeout = 28800
     ) {
         self::$instance = $this;
 
         for ($i = 0; $i < $this->threadCount; $i++) {
-            $thread = new MySQLThread(ThreadSafeArray::fromArray($credentials));
+            $thread = new MySQLThread(ThreadSafeArray::fromArray($credentials), $this->connectionTimeout);
 
             $sleeperHandlerEntry = $this->sleeperHandler->addNotifier(function () use ($thread, $i): void {
                 try {
@@ -66,12 +67,17 @@ final class ConnectionPool {
 
     protected function selectThread(): MySQLThread {
         $threads = $this->threads;
+        if (count($threads) == 0) throw new \LogicException("Tried to select a thread for a mysql query but there are no threads running.");
         usort($threads, static fn(MySQLThread $a, MySQLThread $b) => $a->getQueries()->count() <=> $b->getQueries()->count());
         return $threads[0];
     }
 
     public function getThreadCount(): int {
         return $this->threadCount;
+    }
+
+    public function getConnectionTimeout(): int {
+        return $this->connectionTimeout;
     }
 
     public function getThreads(): array {

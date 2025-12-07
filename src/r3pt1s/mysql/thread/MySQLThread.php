@@ -10,6 +10,8 @@ use pocketmine\snooze\SleeperHandlerEntry;
 
 final class MySQLThread extends Thread {
 
+    private int $startedTime;
+    private int $lastQueryTime = 0;
     private readonly SleeperHandlerEntry $sleeperHandlerEntry;
     /** @var ThreadSafeArray<MySQLQuery> */
     private ThreadSafeArray $queries;
@@ -17,10 +19,36 @@ final class MySQLThread extends Thread {
     private ThreadSafeArray $doneQueries;
 
     public function __construct(
-        private readonly ThreadSafeArray $credentials
+        private readonly ThreadSafeArray $credentials,
+        private readonly int $connectionTimeout = 28800
     ) {
+        $this->startedTime = time();
         $this->queries = new ThreadSafeArray();
         $this->doneQueries = new ThreadSafeArray();
+    }
+
+    public function onRun(): void {
+        $connection = new Connection(...$this->credentials);
+
+        while (true) {
+            $this->synchronized(function(): void {
+                if ($this->isRunning() && $this->queries->count() == 0 && $this->doneQueries->count() == 0) $this->wait();
+            });
+
+            $subTime = $this->lastQueryTime == 0 ? $this->startedTime : $this->lastQueryTime;
+            if ((time() - $subTime) >= $this->connectionTimeout) {
+                $this->lastQueryTime = time();
+                $connection = new Connection(...$this->credentials);
+            }
+
+            /** @var MySQLQuery $query */
+            if (($query = $this->queries->shift()) !== null) {
+                $this->lastQueryTime = time();
+                $query->run($connection);
+                $this->doneQueries[] = $query;
+                $this->sleeperHandlerEntry->createNotifier()->wakeupSleeper();
+            }
+        }
     }
 
     public function setSleeperHandlerEntry(SleeperHandlerEntry $sleeperHandlerEntry): void {
@@ -42,20 +70,7 @@ final class MySQLThread extends Thread {
         return $this->doneQueries;
     }
 
-    public function onRun(): void {
-        $connection = new Connection(...$this->credentials);
-
-        while (true) {
-            $this->synchronized(function(): void {
-                if ($this->isRunning() && $this->queries->count() == 0 && $this->doneQueries->count() == 0) $this->wait();
-            });
-
-            /** @var MySQLQuery $query */
-            if (($query = $this->queries->shift()) !== null) {
-                $query->run($connection);
-                $this->doneQueries[] = $query;
-                $this->sleeperHandlerEntry->createNotifier()->wakeupSleeper();
-            }
-        }
+    public function getConnectionTimeout(): int {
+        return $this->connectionTimeout;
     }
 }
