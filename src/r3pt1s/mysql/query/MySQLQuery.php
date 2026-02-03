@@ -4,6 +4,7 @@ namespace r3pt1s\mysql\query;
 
 use ArrayAccess;
 use Closure;
+use pocketmine\promise\Promise;
 use r3pt1s\mysql\ConnectionPool;
 use r3pt1s\mysql\util\Connection;
 use PDOStatement;
@@ -42,8 +43,8 @@ abstract class MySQLQuery extends ThreadSafe {
         }
     }
 
-    public function execute(?Closure $syncClosure = null): void {
-        ConnectionPool::getInstance()->addQuery($this, $syncClosure);
+    public function execute(): Promise {
+        return ConnectionPool::getInstance()->addQuery($this);
     }
 
     public function isCrashed(): bool {

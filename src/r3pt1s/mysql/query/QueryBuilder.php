@@ -2,8 +2,9 @@
 
 namespace r3pt1s\mysql\query;
 
-use Closure;
 use pmmp\thread\ThreadSafeArray;
+use pocketmine\promise\Promise;
+use pocketmine\promise\PromiseResolver;
 use r3pt1s\mysql\query\impl\AverageDataQuery;
 use r3pt1s\mysql\query\impl\CountDataQuery;
 use r3pt1s\mysql\query\impl\CreateTableQuery;
@@ -19,7 +20,6 @@ use r3pt1s\mysql\query\impl\ReplaceDataQuery;
 use r3pt1s\mysql\query\impl\SelectDataQuery;
 use r3pt1s\mysql\query\impl\SumDataQuery;
 use r3pt1s\mysql\query\impl\UpdateDataQuery;
-use r3pt1s\mysql\util\Connection;
 
 final class QueryBuilder {
 
@@ -33,13 +33,20 @@ final class QueryBuilder {
         return $this;
     }
 
-    public function execute(?Closure $syncClosure = null): void {
-        if (empty($this->queries)) return;
+    public function execute(): Promise {
+        if (empty($this->queries)) {
+            $promise = new PromiseResolver();
+            $promise->resolve(null);
+            return $promise->getPromise();
+        }
+
         if (count($this->queries) > 1) {
-            BatchQuery::create(
+            return BatchQuery::create(
                 ...$this->queries
-            )->execute($syncClosure);
-        } else $this->queries[0]->execute($syncClosure);
+            )->execute();
+        }
+
+        return $this->queries[0]->execute();
     }
 
     public function create(array $columns): self {

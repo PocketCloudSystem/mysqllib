@@ -4,6 +4,7 @@ namespace r3pt1s\mysql;
 
 use Closure;
 use Exception;
+use LogicException;
 use pmmp\thread\ThreadSafeArray;
 use pocketmine\promise\Promise;
 use pocketmine\promise\PromiseResolver;
@@ -74,7 +75,7 @@ final class ConnectionPool {
 
     protected function selectThread(): MySQLThread {
         $threads = $this->threads;
-        if (count($threads) == 0) throw new \LogicException("Tried to select a thread for a mysql query but there are no threads running.");
+        if (count($threads) == 0) throw new LogicException("Tried to select a thread for a mysql query but there are no threads running.");
         usort($threads, static fn(MySQLThread $a, MySQLThread $b) => $a->getQueries()->count() <=> $b->getQueries()->count());
         return $threads[0];
     }

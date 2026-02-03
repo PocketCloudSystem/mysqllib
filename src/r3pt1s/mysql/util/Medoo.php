@@ -1847,7 +1847,7 @@ class Medoo {
      * @param array|null $join
      * @param array|string|null $columns
      * @param array|null $where
-     * @return array
+     * @return array|null
      */
     public function rand(string $table, ?array $join = null, array|string|null $columns = null, ?array $where = null): ?array {
         $orderRaw = $this->raw(
