@@ -2,9 +2,9 @@
 
 namespace r3pt1s\mysql\query\impl;
 
-use pmmp\thread\ThreadSafeArray;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
+use pmmp\thread\ThreadSafeArray;
 
 class UpdateDataQuery extends MySQLQuery {
 
@@ -15,6 +15,10 @@ class UpdateDataQuery extends MySQLQuery {
     ) {}
 
     public function onRun(Connection $connection): bool {
-        return $connection->update($this->table, iterator_to_array($this->data), $this->where !== null ? iterator_to_array($this->where) : null)?->errorCode() === "00000";
+        return $connection->update(
+            $this->table,
+            iterator_to_array($this->data),
+            $this->where !== null ? iterator_to_array($this->where) : null
+        )?->errorCode() === "00000";
     }
 }

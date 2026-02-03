@@ -2,9 +2,9 @@
 
 namespace r3pt1s\mysql\query\impl;
 
-use pmmp\thread\ThreadSafeArray;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
+use pmmp\thread\ThreadSafeArray;
 
 class MinDataQuery extends MySQLQuery {
 
@@ -16,6 +16,11 @@ class MinDataQuery extends MySQLQuery {
     ) {}
 
     public function onRun(Connection $connection): ?string {
-        return $connection->min($this->table, $this->join !== null ? iterator_to_array($this->join) : null, $this->column, $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null);
+        return $connection->min(
+            $this->table,
+            $this->join !== null ? iterator_to_array($this->join) : null,
+            $this->column,
+            $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null
+        );
     }
 }

@@ -2,9 +2,9 @@
 
 namespace r3pt1s\mysql\query\impl;
 
-use pmmp\thread\ThreadSafeArray;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
+use pmmp\thread\ThreadSafeArray;
 
 class CountDataQuery extends MySQLQuery {
 
@@ -16,6 +16,11 @@ class CountDataQuery extends MySQLQuery {
     ) {}
 
     public function onRun(Connection $connection): ?int {
-        return $connection->count($this->table, $this->join !== null ? iterator_to_array($this->join) : null, $this->column, $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null);
+        return $connection->count(
+            $this->table,
+            $this->join !== null ? iterator_to_array($this->join) : null,
+            $this->column,
+            $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null
+        );
     }
 }

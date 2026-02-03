@@ -2,9 +2,9 @@
 
 namespace r3pt1s\mysql\query\impl;
 
-use pmmp\thread\ThreadSafeArray;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
+use pmmp\thread\ThreadSafeArray;
 
 class RandDataQuery extends MySQLQuery {
 
@@ -16,6 +16,11 @@ class RandDataQuery extends MySQLQuery {
     ) {}
 
     public function onRun(Connection $connection): ?array {
-        return $connection->rand($this->table, iterator_to_array($this->join), $this->columns instanceof ThreadSafeArray ? iterator_to_array($this->join) : $this->columns, $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null);
+        return $connection->rand(
+            $this->table,
+            iterator_to_array($this->join),
+            $this->columns instanceof ThreadSafeArray ? iterator_to_array($this->join) : $this->columns,
+            $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null
+        );
     }
 }
