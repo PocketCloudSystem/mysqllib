@@ -3,6 +3,22 @@
 namespace r3pt1s\mysql\query;
 
 use Closure;
+use pmmp\thread\ThreadSafeArray;
+use r3pt1s\mysql\query\impl\AverageDataQuery;
+use r3pt1s\mysql\query\impl\CountDataQuery;
+use r3pt1s\mysql\query\impl\CreateTableQuery;
+use r3pt1s\mysql\query\impl\DeleteDataQuery;
+use r3pt1s\mysql\query\impl\DropTableQuery;
+use r3pt1s\mysql\query\impl\GetDataQuery;
+use r3pt1s\mysql\query\impl\HasDataQuery;
+use r3pt1s\mysql\query\impl\InsertDataQuery;
+use r3pt1s\mysql\query\impl\MaxDataQuery;
+use r3pt1s\mysql\query\impl\MinDataQuery;
+use r3pt1s\mysql\query\impl\RandDataQuery;
+use r3pt1s\mysql\query\impl\ReplaceDataQuery;
+use r3pt1s\mysql\query\impl\SelectDataQuery;
+use r3pt1s\mysql\query\impl\SumDataQuery;
+use r3pt1s\mysql\query\impl\UpdateDataQuery;
 use r3pt1s\mysql\util\Connection;
 
 final class QueryBuilder {
@@ -20,99 +36,84 @@ final class QueryBuilder {
     public function execute(?Closure $syncClosure = null): void {
         if (empty($this->queries)) return;
         if (count($this->queries) > 1) {
-            MultipleQueries::create(
+            BatchQuery::create(
                 ...$this->queries
             )->execute($syncClosure);
         } else $this->queries[0]->execute($syncClosure);
     }
 
     public function create(array $columns): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->create($table, $columns));
+        $this->queries[] = new CreateTableQuery($this->table, ThreadSafeArray::fromArray($columns));
         return $this;
     }
 
     public function drop(): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->drop($table));
+        $this->queries[] = new DropTableQuery($this->table);
         return $this;
     }
 
     public function select(array $join, array|string|null $columns = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->select($table, $join, $columns, $where));
+        $this->queries[] = new SelectDataQuery($this->table, ThreadSafeArray::fromArray($join), is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function insert(array $values, ?string $primaryKey = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->insert($table, $values, $primaryKey));
+        $this->queries[] = new InsertDataQuery($this->table, ThreadSafeArray::fromArray($values), $primaryKey);
         return $this;
     }
 
     public function update(array $data, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->update($table, $data, $where));
+        $this->queries[] = new UpdateDataQuery($this->table, ThreadSafeArray::fromArray($data), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function delete(array $where): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->delete($table, $where));
+        $this->queries[] = new DeleteDataQuery($this->table, ThreadSafeArray::fromArray($where));
         return $this;
     }
 
     public function replace(array $columns, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->replace($table, $columns, $where));
+        $this->queries[] = new ReplaceDataQuery($this->table, ThreadSafeArray::fromArray($columns), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function get(?array $join = null, array|string|null $columns = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->get($table, $join, $columns, $where));
+        $this->queries[] = new GetDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function has(array $join, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->has($table, $join, $where));
+        $this->queries[] = new HasDataQuery($this->table, ThreadSafeArray::fromArray($join), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function rand(?array $join = null, array|string|null $columns = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->rand($table, $join, $columns, $where));
+        $this->queries[] = new RandDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function count(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->count($table, $join, $column, $where));
+        $this->queries[] = new CountDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function min(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->min($table, $join, $column, $where));
+        $this->queries[] = new MinDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function avg(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->avg($table, $join, $column, $where));
+        $this->queries[] = new AverageDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function max(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->max($table, $join, $column, $where));
+        $this->queries[] = new MaxDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 
     public function sum(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $table = $this->table;
-        $this->queries[] = CustomQuery::custom(static fn(Connection $connection) => $connection->sum($table, $join, $column, $where));
+        $this->queries[] = new SumDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
         return $this;
     }
 

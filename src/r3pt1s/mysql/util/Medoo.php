@@ -1849,7 +1849,7 @@ class Medoo {
      * @param array|null $where
      * @return array
      */
-    public function rand(string $table, ?array $join = null, array|string|null $columns = null, ?array $where = null): array {
+    public function rand(string $table, ?array $join = null, array|string|null $columns = null, ?array $where = null): ?array {
         $orderRaw = $this->raw(
             $this->type === 'mysql' ? 'RAND()'
                 : ($this->type === 'mssql' ? 'NEWID()'
