@@ -6,11 +6,11 @@ use Closure;
 use Exception;
 use LogicException;
 use pmmp\thread\ThreadSafeArray;
-use pocketmine\promise\Promise;
-use pocketmine\promise\PromiseResolver;
+use pocketcloud\cloud\util\promise\Promise;
 use pocketmine\snooze\SleeperHandler;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\thread\MySQLThread;
+use r3pt1s\mysql\util\Connection;
 
 final class ConnectionPool {
 
@@ -18,6 +18,12 @@ final class ConnectionPool {
     protected array $completionHandlers = [];
     /** @var array<MySQLThread> */
     protected array $threads = [];
+
+    protected ?Connection $syncConnection = null;
+    protected int $syncStartedTime = 0;
+    protected int $lastSyncQueryTime = 0;
+
+    protected bool $syncQueries = false; // If set to false, queries will be executed in separate thread(s)
 
     /**
      * @param array $credentials e.g. ["address" => "127.0.0.1", "user" => "admin", "password" => "123", "database" => "player", "port" => 3306] <-- in this order
@@ -27,7 +33,7 @@ final class ConnectionPool {
      * @param int $connectionTimeout MySQL Connection timeout in seconds
      */
     public function __construct(
-        array $credentials,
+        private readonly array $credentials,
         private readonly int $threadCount,
         private readonly SleeperHandler $sleeperHandler,
         private readonly Closure $onException,
@@ -36,21 +42,21 @@ final class ConnectionPool {
         self::$instance = $this;
 
         for ($i = 0; $i < $this->threadCount; $i++) {
-            $thread = new MySQLThread(ThreadSafeArray::fromArray($credentials), $this->connectionTimeout);
+            $thread = new MySQLThread(ThreadSafeArray::fromArray($this->credentials), $this->connectionTimeout);
 
             $sleeperHandlerEntry = $this->sleeperHandler->addNotifier(function () use ($thread, $i): void {
                 try {
                     /** @var MySQLQuery $query */
                     while (($query = $thread->getDoneQueries()->shift()) !== null) {
                         $id = spl_object_id($query);
-                        /** @var PromiseResolver $promiseResolver */
-                        [$promiseResolver] = $this->completionHandlers[$id];
+                        /** @var Promise $promise */
+                        [$promise] = $this->completionHandlers[$id];
 
                         if ($query->isCrashed()) {
-                            $promiseResolver->reject();
+                            $promise->reject($query->getException());
                             ($this->onException)($query, new Exception($query->getException()));
                         } else {
-                            $promiseResolver->resolve($query->getResult());
+                            $promise->resolve($query->getResult());
                         }
 
                         unset($this->completionHandlers[$id]);
@@ -66,11 +72,39 @@ final class ConnectionPool {
         }
     }
 
-    public function addQuery(MySQLQuery $query): Promise {
-        $promise = new PromiseResolver();
+    public function enableSyncQueries(bool $enabled = true): self {
+        $this->syncQueries = $enabled;
+        return $this;
+    }
+
+    public function addQuery(MySQLQuery $query, bool $sync = false): Promise {
+        $promise = new Promise();
+        if ($this->syncQueries || $sync) {
+            if ($this->syncStartedTime == 0) $this->syncStartedTime = time();
+            if ($this->syncConnection === null) {
+                $this->syncConnection = new Connection(...$this->credentials);
+            }
+
+            $subTime = $this->lastSyncQueryTime == 0 ? $this->syncStartedTime : $this->lastSyncQueryTime;
+            if ((time() - $subTime) >= $this->connectionTimeout) {
+                $this->lastSyncQueryTime = time();
+                $this->syncConnection = new Connection(...$this->credentials);
+            }
+
+            $query->run($this->syncConnection);
+            if ($query->isCrashed()) {
+                $promise->reject($query->getException());
+                ($this->onException)($query, new Exception($query->getException()));
+            } else {
+                $promise->resolve($query->getResult());
+            }
+
+            return $promise;
+        }
+
         $this->completionHandlers[spl_object_id($query)] = [$promise, $query];
         $this->selectThread()->addQuery($query);
-        return $promise->getPromise();
+        return $promise;
     }
 
     protected function selectThread(): MySQLThread {
@@ -84,12 +118,16 @@ final class ConnectionPool {
         return $this->threadCount;
     }
 
-    public function getConnectionTimeout(): int {
-        return $this->connectionTimeout;
+    public function getSleeperHandler(): SleeperHandler {
+        return $this->sleeperHandler;
     }
 
-    public function getThreads(): array {
-        return $this->threads;
+    public function getOnException(): Closure {
+        return $this->onException;
+    }
+
+    public function getConnectionTimeout(): int {
+        return $this->connectionTimeout;
     }
 
     public static function getInstance(): ?self {

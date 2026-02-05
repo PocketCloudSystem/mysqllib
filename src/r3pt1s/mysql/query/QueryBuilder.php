@@ -3,8 +3,7 @@
 namespace r3pt1s\mysql\query;
 
 use pmmp\thread\ThreadSafeArray;
-use pocketmine\promise\Promise;
-use pocketmine\promise\PromiseResolver;
+use pocketcloud\cloud\util\promise\Promise;
 use r3pt1s\mysql\query\impl\AverageDataQuery;
 use r3pt1s\mysql\query\impl\CountDataQuery;
 use r3pt1s\mysql\query\impl\CreateTableQuery;
@@ -34,12 +33,7 @@ final class QueryBuilder {
     }
 
     public function execute(): Promise {
-        if (empty($this->queries)) {
-            $promise = new PromiseResolver();
-            $promise->resolve(null);
-            return $promise->getPromise();
-        }
-
+        if (empty($this->queries)) return Promise::resolved();
         if (count($this->queries) > 1) {
             return BatchQuery::create(
                 ...$this->queries
