@@ -5,6 +5,7 @@ namespace r3pt1s\mysql\query\impl;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
 use pmmp\thread\ThreadSafeArray;
+use r3pt1s\mysql\util\ThreadedHelper;
 
 class HasDataQuery extends MySQLQuery {
 
@@ -17,8 +18,8 @@ class HasDataQuery extends MySQLQuery {
     public function onRun(Connection $connection): bool {
         return $connection->has(
             $this->table,
-            iterator_to_array($this->join),
-            $this->where !== null ? iterator_to_array($this->where) : null
+            ThreadedHelper::toNormalArray($this->join),
+            $this->where !== null ? ThreadedHelper::toNormalArray($this->where) : null
         );
     }
 }

@@ -2,7 +2,6 @@
 
 namespace r3pt1s\mysql\query;
 
-use pmmp\thread\ThreadSafeArray;
 use pocketcloud\cloud\util\promise\Promise;
 use r3pt1s\mysql\query\impl\AverageDataQuery;
 use r3pt1s\mysql\query\impl\CountDataQuery;
@@ -19,6 +18,7 @@ use r3pt1s\mysql\query\impl\ReplaceDataQuery;
 use r3pt1s\mysql\query\impl\SelectDataQuery;
 use r3pt1s\mysql\query\impl\SumDataQuery;
 use r3pt1s\mysql\query\impl\UpdateDataQuery;
+use r3pt1s\mysql\util\ThreadedHelper;
 
 final class QueryBuilder {
 
@@ -44,7 +44,7 @@ final class QueryBuilder {
     }
 
     public function create(array $columns): self {
-        $this->queries[] = new CreateTableQuery($this->table, ThreadSafeArray::fromArray($columns));
+        $this->queries[] = new CreateTableQuery($this->table, ThreadedHelper::toThreadSafeArray($columns));
         return $this;
     }
 
@@ -54,67 +54,67 @@ final class QueryBuilder {
     }
 
     public function select(array $join, array|string|null $columns = null, ?array $where = null): self {
-        $this->queries[] = new SelectDataQuery($this->table, ThreadSafeArray::fromArray($join), is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new SelectDataQuery($this->table, ThreadedHelper::toThreadSafeArray($join), is_array($columns) ? ThreadedHelper::toThreadSafeArray($columns) : $columns, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function insert(array $values, ?string $primaryKey = null): self {
-        $this->queries[] = new InsertDataQuery($this->table, ThreadSafeArray::fromArray($values), $primaryKey);
+        $this->queries[] = new InsertDataQuery($this->table, ThreadedHelper::toThreadSafeArray($values), $primaryKey);
         return $this;
     }
 
     public function update(array $data, ?array $where = null): self {
-        $this->queries[] = new UpdateDataQuery($this->table, ThreadSafeArray::fromArray($data), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new UpdateDataQuery($this->table, ThreadedHelper::toThreadSafeArray($data), is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function delete(array $where): self {
-        $this->queries[] = new DeleteDataQuery($this->table, ThreadSafeArray::fromArray($where));
+        $this->queries[] = new DeleteDataQuery($this->table, ThreadedHelper::toThreadSafeArray($where));
         return $this;
     }
 
     public function replace(array $columns, ?array $where = null): self {
-        $this->queries[] = new ReplaceDataQuery($this->table, ThreadSafeArray::fromArray($columns), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new ReplaceDataQuery($this->table, ThreadedHelper::toThreadSafeArray($columns), is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function get(?array $join = null, array|string|null $columns = null, ?array $where = null): self {
-        $this->queries[] = new GetDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new GetDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, is_array($columns) ? ThreadedHelper::toThreadSafeArray($columns) : $columns, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function has(array $join, ?array $where = null): self {
-        $this->queries[] = new HasDataQuery($this->table, ThreadSafeArray::fromArray($join), is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new HasDataQuery($this->table, ThreadedHelper::toThreadSafeArray($join), is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function rand(?array $join = null, array|string|null $columns = null, ?array $where = null): self {
-        $this->queries[] = new RandDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, is_array($columns) ? ThreadSafeArray::fromArray($columns) : $columns, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new RandDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, is_array($columns) ? ThreadedHelper::toThreadSafeArray($columns) : $columns, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function count(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $this->queries[] = new CountDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new CountDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, $column, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function min(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $this->queries[] = new MinDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new MinDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, $column, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function avg(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $this->queries[] = new AverageDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new AverageDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, $column, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function max(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $this->queries[] = new MaxDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new MaxDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, $column, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 
     public function sum(?array $join = null, ?string $column = null, ?array $where = null): self {
-        $this->queries[] = new SumDataQuery($this->table, is_array($join) ? ThreadSafeArray::fromArray($join) : $join, $column, is_array($where) ? ThreadSafeArray::fromArray($where) : $where);
+        $this->queries[] = new SumDataQuery($this->table, is_array($join) ? ThreadedHelper::toThreadSafeArray($join) : $join, $column, is_array($where) ? ThreadedHelper::toThreadSafeArray($where) : $where);
         return $this;
     }
 

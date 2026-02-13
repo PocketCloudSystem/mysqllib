@@ -5,6 +5,7 @@ namespace r3pt1s\mysql\query\impl;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
 use pmmp\thread\ThreadSafeArray;
+use r3pt1s\mysql\util\ThreadedHelper;
 
 class DeleteDataQuery extends MySQLQuery {
 
@@ -16,7 +17,7 @@ class DeleteDataQuery extends MySQLQuery {
     public function onRun(Connection $connection): bool {
         return $connection->delete(
             $this->table,
-            iterator_to_array($this->where)
+            ThreadedHelper::toNormalArray($this->where)
         )?->errorCode() === "00000";
     }
 }

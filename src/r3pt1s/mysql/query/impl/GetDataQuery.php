@@ -5,6 +5,7 @@ namespace r3pt1s\mysql\query\impl;
 use r3pt1s\mysql\query\MySQLQuery;
 use r3pt1s\mysql\util\Connection;
 use pmmp\thread\ThreadSafeArray;
+use r3pt1s\mysql\util\ThreadedHelper;
 
 class GetDataQuery extends MySQLQuery {
 
@@ -17,9 +18,9 @@ class GetDataQuery extends MySQLQuery {
 
     public function onRun(Connection $connection): ?array {
         return $connection->get(
-            $this->table, iterator_to_array($this->join),
-            $this->columns instanceof ThreadSafeArray ? iterator_to_array($this->columns) : $this->columns,
-            $this->where instanceof ThreadSafeArray ? iterator_to_array($this->where) : null
+            $this->table, ThreadedHelper::toNormalArray($this->join),
+            $this->columns instanceof ThreadSafeArray ? ThreadedHelper::toNormalArray($this->columns) : $this->columns,
+            $this->where instanceof ThreadSafeArray ? ThreadedHelper::toNormalArray($this->where) : null
         );
     }
 }
