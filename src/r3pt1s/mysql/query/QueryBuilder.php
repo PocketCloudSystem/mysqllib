@@ -33,7 +33,12 @@ final class QueryBuilder {
     }
 
     public function execute(): Promise {
-        if (empty($this->queries)) return Promise::resolved();
+        if (empty($this->queries)) {
+            $promise = new Promise();
+            $promise->reject();
+            return $promise;
+        }
+
         if (count($this->queries) > 1) {
             return BatchQuery::create(
                 ...$this->queries
