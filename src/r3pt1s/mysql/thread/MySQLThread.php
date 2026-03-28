@@ -30,9 +30,9 @@ final class MySQLThread extends Thread {
     public function onRun(): void {
         $connection = new Connection(...$this->credentials);
 
-        while (true) {
+        while ($this->isAlive()) {
             $this->synchronized(function(): void {
-                if ($this->isRunning() && $this->queries->count() == 0 && $this->doneQueries->count() == 0) $this->wait();
+                if ($this->isAlive() && $this->queries->count() == 0 && $this->doneQueries->count() == 0) $this->wait();
             });
 
             $subTime = $this->lastQueryTime == 0 ? $this->startedTime : $this->lastQueryTime;
